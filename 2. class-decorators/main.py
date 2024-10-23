@@ -179,3 +179,31 @@ print(models_registry._registry)
 Использование атрибутов класса: Добавление атрибутов к классам (как __models_registry__) позволяет 
 классам иметь доступ к общему регистру, что может быть полезно для метапрограммирования или для создания гибких систем.
 """
+
+
+class Cached:
+    """
+    Класс-декоратор
+    """
+    def __init__(self, function):
+        self.function = function
+        self._cache = {}
+
+    def __call__(self, *args):
+        if args not in self._cache:
+            self._cache[args] = self.function(*args)
+        return self._cache[args]
+
+
+@Cached
+def fib(n: int):
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+
+print(fib._cache)
+fib(3)
+print(fib._cache)
+fib(10)
+print(fib._cache)
