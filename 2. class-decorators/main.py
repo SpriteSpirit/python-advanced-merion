@@ -88,4 +88,94 @@ Python сначала проверяет D, затем B, затем C, зате
 Избежание конфликтов: MRO помогает разрешать конфликты, когда методы переопределяются в разных базовых классах.
 '''
 
+# Простой декоратор для регистрации моделей
+# Создается пустой словарь registry для хранения классов.
+registry = {}
 
+
+def register_model(cls):
+    """
+    Декоратор для регистрации моделей.
+    Принимает класс и добавляет его в словарь registry, под ключом, равным имени класса (cls.__name__).
+    Добавляет ссылку на registry как атрибут класса под именем __models_registry__
+    :param cls: класс для регистрации
+    :return: возвращает класс, позволяя использовать декоратор.
+    """
+
+    registry[cls.__name__] = cls
+    cls.__models_registry__ = registry
+
+    return cls
+
+
+print(registry)
+
+
+@register_model
+class Post:
+    pass
+
+
+print(registry)
+
+
+@register_model
+class Comment:
+    pass
+
+
+print(Comment.__models_registry__)
+
+
+# Класс для управления регистром моделей
+class ModelsRegistry:
+    """
+    Класс для хранения регистра моделей.
+    Позволяет получать доступ к регистру моделей и выполнять операции с ними.
+    Атрибут _registry нужен  для хранения классов.
+    """
+    def __init__(self):
+        self._registry = {}
+
+    def register(self, decorated_class):
+        """
+        Метод registrer работает аналогично register_model, но использует внутренний словарь _registry.
+        :param decorated_class:
+        :return:
+        """
+        self._registry[decorated_class.__name__] = decorated_class
+        decorated_class.__models_registry__ = self._registry
+
+        return decorated_class
+
+
+models_registry = ModelsRegistry()
+print(models_registry._registry)
+
+
+@models_registry.register
+class Client:
+    pass
+
+
+print(models_registry._registry)
+
+
+@models_registry.register
+class Manager:
+    pass
+
+
+print(models_registry._registry)
+
+"""
+Декораторы для классов: В Python декораторы классов используются для изменения или расширения классов 
+без изменения их определения. 
+Здесь они используются для автоматической регистрации классов в словаре или в атрибуте объекта.
+***
+Регистрация моделей: Это паттерн, который позволяет централизованно управлять классами моделей, 
+что может быть полезно для фреймворков или систем, где необходимо динамически работать с различными типами моделей.
+***
+Использование атрибутов класса: Добавление атрибутов к классам (как __models_registry__) позволяет 
+классам иметь доступ к общему регистру, что может быть полезно для метапрограммирования или для создания гибких систем.
+"""
