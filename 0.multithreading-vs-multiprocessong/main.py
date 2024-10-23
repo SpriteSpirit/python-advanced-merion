@@ -5,8 +5,14 @@ from time import sleep
 from common import configure_logging, timer
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
+import multiprocessing
 
 logger = logging.getLogger(__name__)
+
+"""
+Для I/O bounds задач подходит мультитрединг
+Для CPU bounds задач подходит только мультипроцессинг 
+"""
 
 
 def get_users():
@@ -104,12 +110,39 @@ def demo_threading():
     # cpu_expensive(72_000_000)
 
     # 7 - 4.235
-    with ThreadPoolExecutor() as executor:
-        """
-        Выполнение воркера в пуле потоков
-        """
-        executor.submit(cpu_expensive, 64_000_000)
-        executor.submit(cpu_expensive, 72_000_000)
+    # with ThreadPoolExecutor() as executor:
+    #     """
+    #     Выполнение воркера в пуле потоков
+    #     """
+    #     executor.submit(cpu_expensive, 64_000_000)
+    #     executor.submit(cpu_expensive, 72_000_000)
+
+
+@timer
+def demo_multiprocessing():
+    logger.info("Start demo multiprocessing")
+    # 1 - 3.086
+    # process1 = multiprocessing.Process(
+    #     target=cpu_expensive,
+    #     args=(64_000_000,)
+    # )
+    # process2 = multiprocessing.Process(
+    #     target=cpu_expensive,
+    #     args=(72_000_000,)
+    # )
+    # logger.info("Created processes. Starting")
+    # # запуск процессов
+    # process1.start()
+    # process2.start()
+    # logger.info("Started multiprocessing. Joining...")
+    # # ожидание завершения процессов
+    # process1.join()
+    # process2.join()
+    # logger.info("Done demo multiprocessing")
+
+    # 2 - 3.217
+    with multiprocessing.Pool() as pool:
+        pool.map(cpu_expensive, [64_000_000, 72_000_000])
 
 
 # ожидание завершения тредов
@@ -122,7 +155,9 @@ def main():
     """
     configure_logging()
     logger.info("Start main")
-    demo_threading()
+    # demo_threading()
+    demo_multiprocessing()
+
     logger.info("Done main")
 
 
