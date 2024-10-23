@@ -3,6 +3,7 @@
 
 # декоратор автоматически генерирует методы, такие как __init__, __repr__, и другие, для класса.
 from dataclasses import dataclass
+from functools import  wraps
 
 """
 декоратор автоматически создает методы __init__, __repr__, __eq__ и другие. 
@@ -207,3 +208,60 @@ fib(3)
 print(fib._cache)
 fib(10)
 print(fib._cache)
+
+
+class History:
+    """
+    Класс для хранения истории изменений в объекте.
+    """
+    def __init__(self, total_items=10):
+        self.total_items = total_items
+        self.results_history  = []
+        self.func = None
+
+    def add_history_item(self, result):
+        self.results_history .append(result)
+
+        if len(self.results_history ) > self.total_items:
+            self.results_history .pop(0)
+
+    def wrap(self, func):
+        """
+        Декоратор для добавления функции в историю вызовов.
+        :param func:
+        :return:
+        """
+        self.func = func
+        func.history = self
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = self.func(*args, **kwargs)
+            self.add_history_item(result)
+
+            return result
+
+        return wrapper
+
+    def __call__(self, func):
+        """
+        Декоратор для добавления результата вызова функции в историю.
+        :param func:
+        :return:
+        """
+        return self.wrap(func)
+
+
+
+
+@History(total_items=3)
+def power(num, e):
+    return num ** e
+
+print(power)
+print(power(2, 3))
+print(power(2, 4))
+print(power(5, 4))
+print(power.history)
+print(power.history.results_history)
+print(power.history.total_items)
