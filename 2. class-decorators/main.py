@@ -3,7 +3,7 @@
 
 # декоратор автоматически генерирует методы, такие как __init__, __repr__, и другие, для класса.
 from dataclasses import dataclass
-from functools import  wraps
+from functools import wraps
 
 """
 декоратор автоматически создает методы __init__, __repr__, __eq__ и другие. 
@@ -48,7 +48,6 @@ print(User.__dataclass_params__)
 """
 print(repr(user))
 
-
 """
 MRO расшифровывается как Method Resolution Order (Порядок разрешения методов). 
 Это термин в Python, который описывает порядок, в котором Python ищет методы и атрибуты в иерархии классов 
@@ -76,7 +75,6 @@ class D(B, C):
 
 
 print(D.mro())
-
 
 # [<class '__main__.D'>, <class '__main__.B'>, <class '__main__.C'>, <class '__main__.A'>, <class 'object'>]
 
@@ -135,6 +133,7 @@ class ModelsRegistry:
     Позволяет получать доступ к регистру моделей и выполнять операции с ними.
     Атрибут _registry нужен  для хранения классов.
     """
+
     def __init__(self):
         self._registry = {}
 
@@ -186,6 +185,7 @@ class Cached:
     """
     Класс-декоратор
     """
+
     def __init__(self, function):
         self.function = function
         self._cache = {}
@@ -212,23 +212,38 @@ print(fib._cache)
 
 class History:
     """
-    Класс для хранения истории изменений в объекте.
+    Класс-декоратор для хранения истории изменений в объекте.
+    : total_items: int = 10 максимальное количество сохраняемых результатов
+    : results_history: List[Any] = [] результаты сохраняются в пустой список
     """
+
     def __init__(self, total_items=10):
         self.total_items = total_items
-        self.results_history  = []
+        self.results_history = []
         self.func = None
 
     def add_history_item(self, result):
-        self.results_history .append(result)
+        """
+        Добавляет новый результат result в список results_history.
+        Если количество элементов превышает total_items, самый старый результат (первый в списке) удаляется.
+        """
+        self.results_history.append(result)
 
-        if len(self.results_history ) > self.total_items:
-            self.results_history .pop(0)
+        if len(self.results_history) > self.total_items:
+            self.results_history.pop(0)
 
     def wrap(self, func):
         """
         Декоратор для добавления функции в историю вызовов.
-        :param func:
+        Основная логика декоратора.
+        Принимает функцию func в качестве аргумента.
+        Сохраняет ссылку на оригинальную функцию в self.func и добавляет атрибут history к самой функции,
+        ссылающийся на экземпляр класса History. Внутри wrap определяется функция wrapper, которая будет
+        вызываться вместо оригинальной функции.
+        wrapper вызывает self.func (оригинальную функцию) с переданными аргументами, сохраняет результат в result,
+        добавляет result в историю вызовов через self.add_history_item(result) и возвращает result.
+        Декоратор @wraps(func) из модуля functools обеспечивает сохранение метаданных оригинальной функции
+        (имя, документация и т.д.) после декорирования.
         :return:
         """
         self.func = func
@@ -246,17 +261,16 @@ class History:
     def __call__(self, func):
         """
         Декоратор для добавления результата вызова функции в историю.
-        :param func:
-        :return:
+        Метод позволяет использовать экземпляр класса History непосредственно как декоратор.
+        Он просто вызывает метод self.wrap(func).
         """
         return self.wrap(func)
-
-
 
 
 @History(total_items=3)
 def power(num, e):
     return num ** e
+
 
 print(power)
 print(power(2, 3))
